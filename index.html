@@ -347,9 +347,17 @@
           </div>
         </div>
 
-        <div class="row">
+        <div class="row row-2">
           <div class="field">
-            <label for="location">Preferenza posto *</label>
+            <label for="servizio">Servizio *</label>
+            <select id="servizio" required>
+              <option value="" disabled selected>Seleziona</option>
+              <option value="Aperitivo">🍹 Aperitivo</option>
+              <option value="Cena">🍽️ Cena</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="location">Posto *</label>
             <select id="location" required>
               <option value="" disabled selected>Seleziona</option>
               <option value="Interno">🏠 Interno</option>
@@ -417,7 +425,7 @@
       managerEmail:     'andrea.pedulla@icloud.com',
       restaurantName:   'Il Tuo Ristorante',
       // URL della Google Apps Script Web App — vedi apps-script.js per il setup
-      webAppUrl: 'https://script.google.com/macros/s/AKfycbx1YC1GgtxFo4olxbFJM83NvD83XTb89_5Fk7krqNMynuSXa9PBty6unLz8h4n4QkyvoA/exec',
+      webAppUrl: 'https://script.google.com/macros/s/AKfycbwMuqYKE7QOgoRf_1eOKjfRQ11eUgZ76CM15y53PidkK0Zo3JxLQlO_CCuqxD_2cOsTqw/exec',
     };
     // ─────────────────────────────────────────
 
@@ -445,9 +453,10 @@
         ora:      document.getElementById('ora').value,
         persone:  document.getElementById('persone').value,
         location: document.getElementById('location').value,
+        servizio: document.getElementById('servizio').value,
       };
 
-      if (!d.nome || !d.cognome || !d.telefono || !d.data || !d.ora || !d.persone || !d.location) {
+      if (!d.nome || !d.cognome || !d.telefono || !d.data || !d.ora || !d.persone || !d.location || !d.servizio) {
         showError('Compila tutti i campi obbligatori (*).');
         return;
       }
@@ -458,7 +467,7 @@
         // 1. Controlla disponibilità e salva su Google Sheets
         const queryStr = new URLSearchParams({
           nome: d.nome, cognome: d.cognome, telefono: d.telefono,
-          email: d.email, data: d.data, ora: d.ora, persone: d.persone, location: d.location,
+          email: d.email, data: d.data, ora: d.ora, persone: d.persone, location: d.location, servizio: d.servizio,
         }).toString();
         const res = await fetch(`${CONFIG.webAppUrl}?${queryStr}`);
         const result = await res.json();
@@ -479,6 +488,7 @@
           ora:             d.ora,
           persone:         d.persone,
           location:        d.location,
+          servizio:        d.servizio,
           manager_email:   CONFIG.managerEmail,
         };
 
@@ -534,6 +544,7 @@
         <p><span class="key">Data</span><span class="val">${formatDate(d.data)}</span></p>
         <p><span class="key">Ora</span><span class="val">${d.ora}</span></p>
         <p><span class="key">Persone</span><span class="val">${d.persone}</span></p>
+        <p><span class="key">Servizio</span><span class="val">${d.servizio}</span></p>
         <p><span class="key">Posto</span><span class="val">${d.location}</span></p>
       `;
     }
