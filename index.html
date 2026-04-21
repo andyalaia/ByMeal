@@ -1,16 +1,12 @@
 <!DOCTYPE html>
 <!--
-  VERSIONE STANDALONE — non richiede Node.js.
-  Usa EmailJS (https://emailjs.com) per inviare le email.
+  VERSIONE GMAIL — non richiede Node.js né EmailJS.
+  Le email vengono inviate direttamente da Google Apps Script tramite GmailApp.
 
-  SETUP (5 minuti):
-  1. Crea un account gratuito su https://emailjs.com
-  2. Aggiungi il tuo servizio email (Gmail, Outlook, ecc.)
-  3. Crea due template:
-       • "template_manager"  — email al gestore
-       • "template_client"   — email di conferma al cliente
-  4. Sostituisci EMAILJS_PUBLIC_KEY, EMAILJS_SERVICE_ID
-     con i tuoi valori nella sezione CONFIG qui sotto.
+  SETUP:
+  1. Incolla apps-script.js su script.google.com
+  2. Distribuisci come Web App (Esegui come: Me, Accesso: Chiunque)
+  3. Copia l'URL e aggiornalo in CONFIG.webAppUrl qui sotto
 -->
 <html lang="it">
 <head>
@@ -19,14 +15,13 @@
   <title>By Meal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --gold: #FF8434;
       --gold-light: #ff9d5c;
-      --bg: #0f0f0f;
+      --bg: #1a1a1a;
       --surface: #1a1a1a;
       --surface2: #242424;
       --border: #2e2e2e;
@@ -146,6 +141,55 @@
     }
 
     .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+    .checkbox-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      cursor: pointer;
+      line-height: 1.5;
+      user-select: none;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      width: 0 !important;
+      height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    .checkbox-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      min-width: 18px;
+      height: 18px;
+      border: 1.5px solid var(--border);
+      border-radius: 4px;
+      margin-top: 1px;
+      background: var(--surface2);
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .checkbox-label input[type="checkbox"]:checked + .checkbox-box {
+      background: var(--gold);
+      border-color: var(--gold);
+    }
+
+    .checkbox-label input[type="checkbox"]:checked + .checkbox-box::after {
+      content: '';
+      width: 5px;
+      height: 9px;
+      border: 2px solid #fff;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg) translateY(-1px);
+    }
 
     .btn {
       width: 100%;
@@ -289,7 +333,7 @@
 
   <header>
     <div class="logo">By <span>Meal</span></div>
-    <div class="tagline">Prenota il tuo tavolo</div>
+    <div class="tagline">Il tuo tavolo al Bistrotto</div>
   </header>
 
   <div class="card">
@@ -377,6 +421,14 @@
           </div>
         </div>
 
+        <div class="field" style="margin-top: 8px;">
+          <label class="checkbox-label">
+            <input type="checkbox" id="privacy" required />
+            <span class="checkbox-box"></span>
+            <span style="pointer-events: none;">Acconsento al trattamento dei dati personali ai sensi del <a href="#" style="color: var(--gold); pointer-events: all;" onclick="event.stopPropagation()">GDPR</a> *</span>
+          </label>
+        </div>
+
         <button type="submit" class="btn" id="submitBtn">
           <span class="btn-inner">
             <span class="spinner" id="spinner"></span>
@@ -403,7 +455,7 @@
 
   </div>
 
-  <footer>© 2024 Book Your Meal</footer>
+  <footer>© 2026 Book Your Meal</footer>
 
   <script>
     // ─────────────────────────────────────────
@@ -417,15 +469,14 @@
       managerEmail:     'andrea.pedulla@icloud.com',
       restaurantName:   'Il Tuo Ristorante',
       // URL della Google Apps Script Web App — vedi apps-script.js per il setup
-      webAppUrl: 'https://script.google.com/macros/s/AKfycbzidAMY_1RjxWrab8iqXtz2hRD-3AYl65gllfsJ60HCpq1lEjoy7_ldz8KRMzcHGzcnuQ/exec',
+      webAppUrl: 'https://script.google.com/macros/s/AKfycbxqnet5Bue0cNnLNDFkCCPBeyHL8TvjbAQAjxNArb0Mx3Nu4M4e2vJ7r7uudFCyEHJmxg/exec',
     };
     // ─────────────────────────────────────────
 
-    emailjs.init({ publicKey: CONFIG.publicKey });
 
     const ORARI = {
-      Aperitivo: ['18:00','18:30','19:00','19:30','20:00'],
-      Cena:      ['20:00','20:30','21:00','21:30','22:00','22:30'],
+      Aperitivo: ['18:00-20:00', '18:30-20:30', '19:00-21:00'],
+      Cena:      ['19:30-21:30', '20:00', '20:30', '21:00', '21:30'],
     };
 
     document.getElementById('servizio').addEventListener('change', function() {
@@ -463,6 +514,11 @@
         servizio: document.getElementById('servizio').value,
       };
 
+      if (!document.getElementById('privacy').checked) {
+        showError('Devi accettare il trattamento dei dati personali per procedere.');
+        return;
+      }
+
       if (!d.nome || !d.cognome || !d.telefono || !d.data || !d.ora || !d.persone || !d.location || !d.servizio) {
         showError('Compila tutti i campi obbligatori (*).');
         return;
@@ -499,17 +555,7 @@
           manager_email:   CONFIG.managerEmail,
         };
 
-        // Notifica al gestore
-        await emailjs.send(CONFIG.serviceId, CONFIG.managerTemplateId, params);
-
-        // Conferma automatica al cliente
-        if (d.email) {
-          await emailjs.send(CONFIG.serviceId, CONFIG.clientTemplateId, {
-            ...params,
-            to_email: d.email,
-          });
-        }
-
+        // Email gestite da Apps Script tramite Gmail
         showSuccess(d);
       } catch (err) {
         console.error(err);
