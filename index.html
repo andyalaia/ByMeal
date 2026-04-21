@@ -408,17 +408,18 @@
             <label for="persone">Numero di persone *</label>
             <select id="persone" required>
               <option value="" disabled selected>Seleziona</option>
-              <option value="1">1 persona</option>
               <option value="2">2 persone</option>
               <option value="3">3 persone</option>
               <option value="4">4 persone</option>
               <option value="5">5 persone</option>
               <option value="6">6 persone</option>
-              <option value="7">7 persone</option>
-              <option value="8">8 persone</option>
-              <option value="9+">9 o più persone</option>
+              <option value="6+">Più di 6 persone</option>
             </select>
           </div>
+        </div>
+        <div id="instagram-msg" style="display:none; margin-top: 12px; padding: 14px 16px; background: #2a2a2a; border-radius: 8px; border-left: 3px solid var(--gold); font-size: 0.9rem; color: #ccc; line-height: 1.6;">
+          Per prenotazioni di gruppo oltre 6 persone, scrivici su Instagram:<br>
+          <a href="https://www.instagram.com/ilbistrotto/" target="_blank" style="color: var(--gold); text-decoration: none; font-weight: 500;">@ilbistrotto</a>
         </div>
 
         <div class="field" style="margin-top: 8px;">
@@ -479,6 +480,11 @@
       Cena:      ['19:30-21:30', '20:00', '20:30', '21:00', '21:30'],
     };
 
+    document.getElementById('persone').addEventListener('change', function() {
+      const msg = document.getElementById('instagram-msg');
+      msg.style.display = this.value === '6+' ? 'block' : 'none';
+    });
+
     document.getElementById('servizio').addEventListener('change', function() {
       const ora = document.getElementById('ora');
       ora.innerHTML = '<option value="" disabled selected>Seleziona</option>';
@@ -516,6 +522,11 @@
 
       if (!document.getElementById('privacy').checked) {
         showError('Devi accettare il trattamento dei dati personali per procedere.');
+        return;
+      }
+
+      if (d.persone === '6+') {
+        showError('Per gruppi oltre 6 persone scrivici su Instagram: @ilbistrotto');
         return;
       }
 
