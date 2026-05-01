@@ -52,7 +52,7 @@
     .logo {
       font-family: 'Cormorant Garamond', Georgia, serif;
       font-size: clamp(2rem, 5vw, 3rem);
-      font-weight: 300;
+      font-weight: 700;
       letter-spacing: 0.12em;
       color: var(--text);
     }
@@ -79,7 +79,7 @@
 
     .card-title {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 1.5rem;
+      font-size: 26px;
       font-weight: 400;
       color: var(--gold);
       margin-bottom: 32px;
@@ -496,7 +496,13 @@
     });
 
     const dataInput = document.getElementById('data');
-    dataInput.setAttribute('min', new Date().toISOString().split('T')[0]);
+    const now = new Date();
+    const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
+    const minDate = now >= cutoff
+      ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+      : now;
+    const pad = n => String(n).padStart(2, '0');
+    dataInput.setAttribute('min', `${minDate.getFullYear()}-${pad(minDate.getMonth() + 1)}-${pad(minDate.getDate())}`);
 
     const form = document.getElementById('bookingForm');
     const submitBtn = document.getElementById('submitBtn');
